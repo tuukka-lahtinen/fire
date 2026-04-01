@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>FIRE Laskuri</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0b10;--surface:#13131c;--surface2:#1c1c28;--border:#2e2e42;--accent:#6c63ff;--adim:rgba(108,99,255,0.15);--green:#00d97e;--red:#ff4d6d;--amber:#f5a623;--text:#e6e6f0;--muted:#6b6b8a}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;padding-bottom:2rem}
+.container{max-width:1200px;margin:0 auto;padding:1.5rem 1.25rem}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:.75rem}
+.logo-icon{width:44px;height:44px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+.logo h1{font-size:1.4rem;font-weight:800;letter-spacing:-.02em}
+.logo span{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.08em;display:block}
+.tabs{display:flex;gap:.4rem;margin-bottom:1.75rem;flex-wrap:wrap}
+.tab{font-family:'Space Mono',monospace;font-size:.7rem;padding:.5rem 1rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .2s;min-height:36px}
+.tab.active{background:var(--adim);border-color:var(--accent);color:var(--accent)}
+.panel{display:none}.panel.active{display:block;animation:fu .3s ease}
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+.three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.ic{display:grid;grid-template-columns:290px 1fr;gap:1.25rem;align-items:start}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.25rem;margin-bottom:1.25rem}
+.ct{font-size:.9rem;font-weight:700;margin-bottom:1rem}
+.sc{background:var(--surface2);border-radius:12px;padding:1rem;text-align:center}
+.sl{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.4rem}
+.sv{font-size:1.5rem;font-weight:800;letter-spacing:-.03em}
+.ig{margin-bottom:1rem}
+.il{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.06em;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center}
+.il span{color:var(--text);font-size:.75rem}
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+.cw{position:relative;width:100%;height:280px}
+.cw canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important}
+.pb{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;margin:.4rem 0}
+.pf{height:100%;border-radius:4px;transition:width .8s ease}
+.sr{padding:1rem;border-radius:12px;border:1px solid var(--border);margin-bottom:.75rem}
+.srv{font-family:'Space Mono',monospace;font-size:1.2rem;font-weight:700}
+.wt{width:100%;border-collapse:collapse;font-size:.78rem}
+.wt th{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:.5rem .75rem;text-align:left;border-bottom:1px solid var(--border)}
+.wt td{padding:.6rem .75rem;border-bottom:1px solid var(--border)}
+.wt tr:last-child td{border-bottom:none}
+.rb{display:inline-block;font-family:'Space Mono',monospace;font-size:.65rem;padding:.2rem .6rem;border-radius:6px;margin:.2rem;cursor:pointer;border:1px solid transparent;transition:all .2s}
+.rb.active{border-color:var(--accent);background:var(--adim);color:var(--accent)}
+.rb:not(.active){border-color:var(--border);color:var(--muted)}
+footer{margin-top:2rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+footer p{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted)}
+footer a{color:var(--accent);text-decoration:none}
+.leg{display:flex;gap:1rem;margin-top:.75rem;font-size:.75rem;flex-wrap:wrap}
+.leg span{display:flex;align-items:center;gap:6px}
+.legdot{width:10px;height:10px;border-radius:2px;display:inline-block}
+@media(max-width:700px){.two-col,.three-col,.ic{grid-template-columns:1fr}.cw{height:220px}.sv{font-size:1.2rem}}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <div class="logo">
+    <div class="logo-icon">🔥</div>
+    <div><h1>FIRE Laskuri</h1><span>TALOUDELLINEN VAPAUS — SIMULAATTORI</span></div>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('compound',this)">Korkoa korolle</button>
+  <button class="tab" onclick="showTab('fire',this)">FIRE-numero</button>
+  <button class="tab" onclick="showTab('montecarlo',this)">Monte Carlo</button>
+  <button class="tab" onclick="showTab('withdrawal',this)">Nosto&shy;strategiat</button>
+  <button class="tab" onclick="showTab('index',this)">Indeksivertailu</button>
+</div>
+
+<!-- TAB 1 -->
+<div class="panel active" id="tab-compound">
+  <div class="ic">
+    <div>
+      <div class="card">
+        <div class="ct">Parametrit</div>
+        <div class="ig"><div class="il">Aloitussumma<span id="l-init">10 000 €</span></div><input type="range" min="0" max="500000" step="1000" value="10000" oninput="uc()" id="s-init"></div>
+        <div class="ig"><div class="il">Kuukausisäästö<span id="l-mon">500 €</span></div><input type="range" min="0" max="5000" step="50" value="500" oninput="uc()" id="s-mon"></div>
+        <div class="ig"><div class="il">Vuotuinen tuotto<span id="l-ret">7 %</span></div><input type="range" min="1" max="20" step="0.5" value="7" oninput="uc()" id="s-ret"></div>
+        <div class="ig"><div class="il">Sijoitusaika<span id="l-yr">25 v</span></div><input type="range" min="1" max="50" step="1" value="25" oninput="uc()" id="s-yr"></div>
+        <div class="ig"><div class="il">Inflaatio<span id="l-inf">2 %</span></div><input type="range" min="0" max="8" step="0.5" value="2" oninput="uc()" id="s-inf"></div>
+        <div style="border-top:1px solid var(--border);margin:.75rem 0"></div>
+        <div style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);margin-bottom:.5rem">Riskiprofiili</div>
+        <div>
+          <span class="rb active" onclick="setRisk(this,'aggressive')">Aggressiivinen</span>
+          <span class="rb" onclick="setRisk(this,'moderate')">Maltillinen</span>
+          <span class="rb" onclick="setRisk(this,'conservative')">Konservatiivinen</span>
+        </div>
+      </div>
+      <div class="three-col">
+        <div class="sc"><div class="sl">Loppusumma</div><div class="sv" id="c-tot">—</div></div>
+        <div class="sc"><div class="sl">Reaaliarvo</div><div class="sv" id="c-real">—</div></div>
+        <div class="sc"><div class="sl">Tuotto</div><div class="sv" style="color:var(--green)" id="c-gain">—</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="ct">Salkkukasvu</div>
+        <div class="cw"><canvas id="compChart"></canvas></div>
+        <div class="leg">
+          <span><span class="legdot" style="background:#6c63ff"></span>Nimellistuotto</span>
+          <span><span class="legdot" style="background:#00d97e"></span>Reaalituotto</span>
+          <span><span class="legdot" style="background:#6b6b8a"></span>Sijoitettu</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">Säästöasteen vaikutus loppusummaan</div>
+        <div class="cw" style="height:220px"><canvas id="savChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 2 -->
+<div class="panel" id="tab-fire">
+  <div class="ic">
+    <div>
+      <div class="card">
+        <div class="ct">FIRE-parametrit</div>
+        <div class="ig"><div class="il">Kuukausimenot<span id="lf-exp">2 500 €</span></div><input type="range" min="500" max="10000" step="100" value="2500" oninput="uf()" id="sf-exp"></div>
+        <div class="ig"><div class="il">Nostoprosentti (SWR)<span id="lf-swr">4 %</span></div><input type="range" min="2" max="6" step="0.1" value="4" oninput="uf()" id="sf-swr"></div>
+        <div class="ig"><div class="il">Nykyinen salkku<span id="lf-cur">50 000 €</span></div><input type="range" min="0" max="2000000" step="5000" value="50000" oninput="uf()" id="sf-cur"></div>
+        <div class="ig"><div class="il">Kuukausisäästö<span id="lf-sav">1 000 €</span></div><input type="range" min="0" max="5000" step="50" value="1000" oninput="uf()" id="sf-sav"></div>
+        <div class="ig"><div class="il">Vuotuinen tuotto<span id="lf-ret">7 %</span></div><input type="range" min="1" max="15" step="0.5" value="7" oninput="uf()" id="sf-ret"></div>
+      </div>
+    </div>
+    <div>
+      <div class="three-col">
+        <div class="sc"><div class="sl">FIRE-numero</div><div class="sv" style="color:var(--accent)" id="f-num">—</div></div>
+        <div class="sc"><div class="sl">Vuotta FIRE:hen</div><div class="sv" id="f-yrs">—</div></div>
+        <div class="sc"><div class="sl">FIRE-vuosi</div><div class="sv" id="f-yr">—</div></div>
+      </div>
+      <div class="card" style="margin-top:1.25rem">
+        <div class="ct">Edistyminen FIRE:hen</div>
+        <div style="display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:.7rem;color:var(--muted);margin-bottom:.3rem"><span>Nykyinen salkku</span><span id="f-pct">—</span></div>
+        <div class="pb"><div class="pf" id="f-bar" style="background:var(--accent);width:0%"></div></div>
+        <div class="cw" style="margin-top:1rem"><canvas id="fireChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="ct">SWR-vertailu ja Coast FIRE</div>
+        <div class="two-col" style="gap:.75rem">
+          <div class="sc"><div class="sl">3% SWR (turvallinen)</div><div class="sv" style="font-size:1rem" id="f-s3">—</div></div>
+          <div class="sc"><div class="sl">4% SWR (perinteinen)</div><div class="sv" style="font-size:1rem" id="f-s4">—</div></div>
+          <div class="sc"><div class="sl">5% SWR (optimistinen)</div><div class="sv" style="font-size:1rem" id="f-s5">—</div></div>
+          <div class="sc"><div class="sl">Coast FIRE</div><div class="sv" style="font-size:1rem;color:var(--amber)" id="f-coast">—</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 3 -->
+<div class="panel" id="tab-montecarlo">
+  <div class="ic">
+    <div>
+      <div class="card">
+        <div class="ct">Simulaatioparametrit</div>
+        <div class="ig"><div class="il">Salkun koko<span id="lm-p">500 000 €</span></div><input type="range" min="50000" max="3000000" step="10000" value="500000" oninput="rmc()" id="sm-p"></div>
+        <div class="ig"><div class="il">Vuotuinen nosto<span id="lm-w">4 %</span></div><input type="range" min="1" max="8" step="0.1" value="4" oninput="rmc()" id="sm-w"></div>
+        <div class="ig"><div class="il">Simulointijakso<span id="lm-per">30 v</span></div><input type="range" min="10" max="60" step="1" value="30" oninput="rmc()" id="sm-per"></div>
+        <div class="ig"><div class="il">Odotettu tuotto<span id="lm-r">7 %</span></div><input type="range" min="1" max="15" step="0.5" value="7" oninput="rmc()" id="sm-r"></div>
+        <div class="ig"><div class="il">Volatiliteetti<span id="lm-v">15 %</span></div><input type="range" min="5" max="35" step="1" value="15" oninput="rmc()" id="sm-v"></div>
+        <div class="ig"><div class="il">Simulaatioita<span id="lm-n">1 000</span></div><input type="range" min="100" max="5000" step="100" value="1000" oninput="rmc()" id="sm-n"></div>
+      </div>
+      <div class="card">
+        <div class="ct">Tulokset</div>
+        <div class="sr">
+          <div style="font-size:.8rem;font-weight:700;margin-bottom:.4rem">Onnistumisprosentti</div>
+          <div class="srv" id="mc-s">—</div>
+          <div class="pb" style="margin-top:.5rem"><div class="pf" id="mc-sb" style="background:var(--green);width:0%"></div></div>
+        </div>
+        <div class="two-col" style="gap:.75rem">
+          <div class="sc"><div class="sl">Mediaani lopussa</div><div class="sv" style="font-size:1rem" id="mc-med">—</div></div>
+          <div class="sc"><div class="sl">Pessimistinen 10%</div><div class="sv" style="font-size:1rem;color:var(--red)" id="mc-p10">—</div></div>
+          <div class="sc"><div class="sl">Optimistinen 90%</div><div class="sv" style="font-size:1rem;color:var(--green)" id="mc-p90">—</div></div>
+          <div class="sc"><div class="sl">Kaatui (jäi 0)</div><div class="sv" style="font-size:1rem;color:var(--red)" id="mc-r">—</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="ct">Simulaatiopolut</div>
+        <div class="cw" style="height:300px"><canvas id="mcChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="ct">Loppuarvojen jakauma</div>
+        <div class="cw" style="height:200px"><canvas id="mcHist"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 4 -->
+<div class="panel" id="tab-withdrawal">
+  <div class="ic">
+    <div>
+      <div class="card">
+        <div class="ct">Parametrit</div>
+        <div class="ig"><div class="il">Aloitussalkku<span id="lw-p">1 000 000 €</span></div><input type="range" min="100000" max="5000000" step="50000" value="1000000" oninput="uw()" id="sw-p"></div>
+        <div class="ig"><div class="il">Nosto/vuosi<span id="lw-a">40 000 €</span></div><input type="range" min="5000" max="200000" step="1000" value="40000" oninput="uw()" id="sw-a"></div>
+        <div class="ig"><div class="il">Vuotuinen tuotto<span id="lw-r">7 %</span></div><input type="range" min="1" max="15" step="0.5" value="7" oninput="uw()" id="sw-r"></div>
+        <div class="ig"><div class="il">Inflaatio<span id="lw-i">2 %</span></div><input type="range" min="0" max="8" step="0.5" value="2" oninput="uw()" id="sw-i"></div>
+        <div class="ig"><div class="il">Vuodet<span id="lw-y">35 v</span></div><input type="range" min="10" max="60" step="1" value="35" oninput="uw()" id="sw-y"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="ct">Strategioiden vertailu</div>
+        <div class="cw" style="height:300px"><canvas id="wChart"></canvas></div>
+        <div class="leg">
+          <span><span class="legdot" style="background:#6c63ff"></span>Kiinteä summa</span>
+          <span><span class="legdot" style="background:#00d97e"></span>Kiinteä % (4%)</span>
+          <span><span class="legdot" style="background:#f5a623"></span>Dynaaminen</span>
+          <span><span class="legdot" style="background:#ff4d6d"></span>Inflaatiokorjattu</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">Yhteenveto</div>
+        <div style="overflow-x:auto"><table class="wt" id="wtbl"></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 5 -->
+<div class="panel" id="tab-index">
+  <div class="card">
+    <div class="ct">Historialliset vuosituotot (S&P 500 ja MSCI World)</div>
+    <div class="cw" style="height:300px"><canvas id="idxChart"></canvas></div>
+  </div>
+  <div class="three-col" style="margin-bottom:1.25rem">
+    <div class="sc"><div class="sl">S&P 500 — keskim.</div><div class="sv" style="color:var(--green)">10.5%</div></div>
+    <div class="sc"><div class="sl">MSCI World — keskim.</div><div class="sv" style="color:var(--accent)">9.2%</div></div>
+    <div class="sc"><div class="sl">MSCI EM — keskim.</div><div class="sv" style="color:var(--amber)">8.1%</div></div>
+  </div>
+  <div class="card">
+    <div class="ct">10 000 € sijoituksen kasvu indekseittäin (2000–2023)</div>
+    <div class="cw" style="height:280px"><canvas id="idxGrowth"></canvas></div>
+    <div class="leg">
+      <span><span class="legdot" style="background:#00d97e"></span>S&P 500</span>
+      <span><span class="legdot" style="background:#6c63ff"></span>MSCI World</span>
+      <span><span class="legdot" style="background:#f5a623"></span>MSCI EM</span>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>Rakennettu Pythonilla · <a href="https://github.com/tuukka-lahtinen/fire" target="_blank">GitHub ↗</a></p>
+  <p>⚠ Ei sijoitusneuvontaa · Vain oppimiskäyttöön</p>
+</footer>
+</div>
+
+<script>
+const fmt=n=>{const a=Math.abs(n);if(a>=1e6)return(n/1e6).toFixed(2)+'M €';if(a>=1e3)return Math.round(n/1000)+'k €';return Math.round(n)+' €'};
+const fp=n=>n.toFixed(1)+'%';
+const now=new Date().getFullYear();
+
+function showTab(id,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  if(id==='compound')uc();
+  if(id==='fire')uf();
+  if(id==='montecarlo')rmc();
+  if(id==='withdrawal')uw();
+  if(id==='index')ui();
+}
+
+const risk={aggressive:{r:10},moderate:{r:7},conservative:{r:4}};
+function setRisk(el,r){
+  document.querySelectorAll('.rb').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('s-ret').value=risk[r].r;
+  document.getElementById('l-ret').textContent=risk[r].r+' %';
+  uc();
+}
+
+let cc=null,sc=null;
+function uc(){
+  const ini=+document.getElementById('s-init').value;
+  const mon=+document.getElementById('s-mon').value;
+  const ret=+document.getElementById('s-ret').value/100;
+  const yr =+document.getElementById('s-yr').value;
+  const inf=+document.getElementById('s-inf').value/100;
+  document.getElementById('l-init').textContent=ini.toLocaleString('fi-FI')+' €';
+  document.getElementById('l-mon').textContent=mon+' €';
+  document.getElementById('l-ret').textContent=(+document.getElementById('s-ret').value)+' %';
+  document.getElementById('l-yr').textContent=yr+' v';
+  document.getElementById('l-inf').textContent=(+document.getElementById('s-inf').value)+' %';
+  const lbl=[],nom=[],rl=[],inv=[];
+  let n=ini,iv=ini;
+  for(let y=0;y<=yr;y++){
+    lbl.push(now+y);nom.push(Math.round(n));rl.push(Math.round(n/Math.pow(1+inf,y)));inv.push(Math.round(iv));
+    n=n*(1+ret)+mon*12;iv+=mon*12;
+  }
+  document.getElementById('c-tot').textContent=fmt(nom[nom.length-1]);
+  document.getElementById('c-real').textContent=fmt(rl[rl.length-1]);
+  document.getElementById('c-gain').textContent='+'+fmt(nom[nom.length-1]-inv[inv.length-1]);
+  const ctx=document.getElementById('compChart').getContext('2d');
+  if(cc)cc.destroy();
+  cc=new Chart(ctx,{type:'line',data:{labels:lbl,datasets:[{data:nom,borderColor:'#6c63ff',borderWidth:2,fill:false,tension:.3,pointRadius:0},{data:rl,borderColor:'#00d97e',borderWidth:2,fill:false,tension:.3,pointRadius:0},{data:inv,borderColor:'#6b6b8a',borderWidth:1.5,fill:false,tension:0,pointRadius:0,borderDash:[4,4]}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b6b8a',font:{size:10},maxTicksLimit:8}},y:{ticks:{color:'#6b6b8a',font:{size:10},callback:v=>fmt(v)}}}}});
+  const saves=[100,300,500,1000,2000,3000];
+  const tots=saves.map(s=>{let v=ini;for(let y=0;y<yr;y++)v=v*(1+ret)+s*12;return Math.round(v);});
+  const ctx2=document.getElementById('savChart').getContext('2d');
+  if(sc)sc.destroy();
+  sc=new Chart(ctx2,{type:'bar',data:{labels:saves.map(s=>s+'€/kk'),datasets:[{data:tots,backgroundColor:saves.map(s=>s===mon?'#6c63ff':'#2e2e42'),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b6b8a',font:{size:10}}},y:{ticks:{color:'#6b6b8a',font:{size:10},callback:v=>fmt(v)}}}}});
+}
+
+let fc=null;
+function uf(){
+  const exp=+document.getElementById('sf-exp').value;
+  const swr=+document.getElementById('sf-swr').value/100;
+  const cur=+document.getElementById('sf-cur').value;
+  const sav=+document.getElementById('sf-sav').value;
+  const ret=+document.getElementById('sf-ret').value/100;
+  document.getElementById('lf-exp').textContent=exp.toLocaleString('fi-FI')+' €';
+  document.getElementById('lf-swr').textContent=(+document.getElementById('sf-swr').value)+' %';
+  document.getElementById('lf-cur').textContent=cur.toLocaleString('fi-FI')+' €';
+  document.getElementById('lf-sav').textContent=sav+' €';
+  document.getElementById('lf-ret').textContent=(+document.getElementById('sf-ret').value)+' %';
+  const fn=(exp*12)/swr;
+  document.getElementById('f-s3').textContent=fmt((exp*12)/.03);
+  document.getElementById('f-s4').textContent=fmt((exp*12)/.04);
+  document.getElementById('f-s5').textContent=fmt((exp*12)/.05);
+  document.getElementById('f-coast').textContent=fmt(fn/Math.pow(1.07,40));
+  let p=cur,y=0;
+  while(p<fn&&y<100){p=p*(1+ret)+sav*12;y++;}
+  document.getElementById('f-num').textContent=fmt(fn);
+  document.getElementById('f-yrs').textContent=y<100?y+' v':'100+ v';
+  document.getElementById('f-yr').textContent=y<100?(now+y)+'':'—';
+  const pct=Math.min((cur/fn)*100,100);
+  document.getElementById('f-pct').textContent=fp(pct);
+  document.getElementById('f-bar').style.width=pct+'%';
+  const lbl=[],vals=[],fline=[];
+  let pp=cur;
+  for(let i=0;i<=Math.min(y+5,50);i++){lbl.push(now+i);vals.push(Math.round(pp));fline.push(Math.round(fn));pp=pp*(1+ret)+sav*12;}
+  const ctx=document.getElementById('fireChart').getContext('2d');
+  if(fc)fc.destroy();
+  fc=new Chart(ctx,{type:'line',data:{labels:lbl,datasets:[{data:vals,borderColor:'#6c63ff',borderWidth:2,fill:true,backgroundColor:'rgba(108,99,255,.1)',tension:.3,pointRadius:0},{data:fline,borderColor:'#00d97e',borderWidth:1.5,fill:false,borderDash:[6,4],pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b6b8a',font:{size:10},maxTicksLimit:8}},y:{ticks:{color:'#6b6b8a',font:{size:10},callback:v=>fmt(v)}}}}});
+}
+
+let mc1=null,mc2=null;
+function rmc(){
+  const port=+document.getElementById('sm-p').value;
+  const wPct=+document.getElementById('sm-w').value/100;
+  const per =+document.getElementById('sm-per').value;
+  const mret=+document.getElementById('sm-r').value/100;
+  const vol =+document.getElementById('sm-v').value/100;
+  const n   =+document.getElementById('sm-n').value;
+  document.getElementById('lm-p').textContent=port.toLocaleString('fi-FI')+' €';
+  document.getElementById('lm-w').textContent=(+document.getElementById('sm-w').value)+' %';
+  document.getElementById('lm-per').textContent=per+' v';
+  document.getElementById('lm-r').textContent=(+document.getElementById('sm-r').value)+' %';
+  document.getElementById('lm-v').textContent=(+document.getElementById('sm-v').value)+' %';
+  document.getElementById('lm-n').textContent=n.toLocaleString('fi-FI');
+  function rn(m,s){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return m+s*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+  const w=port*wPct,finals=[],paths=[];
+  let succ=0;
+  for(let s=0;s<n;s++){
+    let p=port;const path=[p];let dead=false;
+    for(let y=0;y<per;y++){p=Math.max(0,p*(1+rn(mret,vol))-w);if(p===0)dead=true;path.push(Math.round(p));}
+    if(!dead&&p>0)succ++;
+    finals.push(p);
+    if(s<80)paths.push(path);
+  }
+  finals.sort((a,b)=>a-b);
+  const med=finals[Math.floor(n*.5)];
+  const p10=finals[Math.floor(n*.1)];
+  const p90=finals[Math.floor(n*.9)];
+  const ruin=finals.filter(v=>v<=0).length;
+  const sp=(succ/n)*100;
+  document.getElementById('mc-s').textContent=fp(sp);
+  document.getElementById('mc-sb').style.width=fp(sp);
+  document.getElementById('mc-sb').style.background=sp>80?'#00d97e':sp>60?'#f5a623':'#ff4d6d';
+  document.getElementById('mc-med').textContent=fmt(med);
+  document.getElementById('mc-p10').textContent=fmt(p10);
+  document.getElementById('mc-p90').textContent=fmt(p90);
+  document.getElementById('mc-r').textContent=ruin+' / '+n;
+  const lbl=Array.from({length:per+1},(_,i)=>now+i);
+  const ds=paths.map(path=>({data:path,borderColor:path[path.length-1]>0?'rgba(108,99,255,.12)':'rgba(255,77,109,.2)',borderWidth:1,fill:false,pointRadius:0,tension:.2}));
+  const medP=lbl.map((_,i)=>{let p=port;for(let y=0;y<i;y++)p=Math.max(0,p*(1+mret)-w);return Math.round(p);});
+  ds.push({data:medP,borderColor:'#00d97e',borderWidth:2.5,fill:false,pointRadius:0,tension:.3});
+  const ctx=document.getElementById('mcChart').getContext('2d');
+  if(mc1)mc1.destroy();
+  mc1=new Chart(ctx,{type:'line',data:{labels:lbl,datasets:ds},options:{responsive:true,maintainAspectRatio:false,animation:{duration:200},plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b6b8a',font:{size:10},maxTicksLimit:8}},y:{min:0,ticks:{color:'#6b6b8a',font:{size:10},callback:v=>fmt(v)}}}}});
+  const bins=20,maxV=Math.max(...finals),bsz=maxV/bins,hist=Array(bins).fill(0);
+  finals.forEach(v=>{const b=Math.min(Math.floor(v/bsz),bins-1);hist[b]++;});
+  const ctx2=document.getElementById('mcHist').getContext('2d');
+  if(mc2)mc2.destroy();
+  mc2=new Chart(ctx2,{type:'bar',data:{labels:Array.from({length:bins},(_,i)=>fmt(i*bsz)),datasets:[{data:hist,backgroundColor:'rgba(108,99,255,.6)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:200},plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b6b8a',font:{size:9},maxTicksLimit:6}},y:{ticks:{color:'#6b6b8a',font:{size:9}}}}}});
+}
+
+let wc=null;
+function uw(){
+  const port=+document.getElementById('sw-p').value;
+  const amt =+document.getElementById('sw-a').value;
+  const ret =+document.getElementById('sw-r').value/100;
+  const inf =+document.getElementById('sw-i').value/100;
+  const yr  =+document.getElementById('sw-y').value;
+  document.getElementById('lw-p').textContent=port.toLocaleString('fi-FI')+' €';
+  document.getElementById('lw-a').textContent=amt.toLocaleString('fi-FI')+' €';
+  document.getElementById('lw-r').textContent=(+document.getElementById('sw-r').value)+' %';
+  document.getElementById('lw-i').textContent=(+document.getElementById('sw-i').value)+' %';
+  document.getElementById('lw-y').textContent=yr+' v';
+  const lbl=Array.from({length:yr+1},(_,i)=>now+i);
+  let p1=port,p2=port,p3=port,p4=port,a4=amt;
+  const d1=[port],d2=[port],d3=[port],d4=[port];
+  for(let y=0;y<yr;y++){
+    p1=Math.max(0,p1*(1+ret)-amt);d1.push(Math.round(p1));
+    p2=Math.max(0,p2*(1+ret)-p2*.04);d2.push(Math.round(p2));
+    const dyn=Math.min(Math.max(p3*.02,p3*.04*(1+(ret-.07)/.07)),p3*.06);
+    p3=Math.max(0,p3*(1+ret)-dyn);d3.push(Math.round(p3));
+    p4=Math.max(0,p4*(1+ret)-a4);a4*=(1+inf);d4.push(Math.round(p4));
+  }
+  const ctx=document.getElementById('wChart').getContext('2d');
+  if(wc)wc.destroy();
+  wc=new Chart(ctx,{type:'line',data:{labels:lbl,datasets:[{data:d1,borderColor:'#6c63ff',borderWidth:2,fill:false,tension:.3,pointRadius:0},{data:d2,borderColor:'#00d97e',borderWidth:2,fill:false,tension:.3,pointRadius:0},{data:d3,borderColor:'#f5a623',borderWidth:2,fill:false,tension:.3,pointRadius:0},{data:d4,borderColor:'#ff4d6d',borderWidth:2,fill:false,tension:.3,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b6b8a',font:{size:10},maxTicksLimit:8}},y:{min:0,ticks:{color:'#6b6b8a',font:{size:10},callback:v=>fmt(v)}}}}});
+  const strats=[{n:'Kiinteä summa',d:d1,c:'#6c63ff'},{n:'Kiinteä % (4%)',d:d2,c:'#00d97e'},{n:'Dynaaminen',d:d3,c:'#f5a623'},{n:'Inflaatiokorjattu',d:d4,c:'#ff4d6d'}];
+  document.getElementById('wtbl').innerHTML=`<thead><tr><th>Strategia</th><th>Loppusumma</th><th>Kestää?</th><th>Riski</th></tr></thead><tbody>${strats.map(s=>{const last=s.d[s.d.length-1];const ok=last>0;return`<tr><td style="color:${s.c}">${s.n}</td><td>${fmt(last)}</td><td style="color:${ok?'var(--green)':'var(--red)'}">${ok?'Kyllä ✓':'Ei ✗'}</td><td style="color:var(--muted)">${s.n==='Kiinteä summa'?'Korkea':s.n==='Kiinteä % (4%)'?'Matala':s.n==='Dynaaminen'?'Matala':'Keski'}</td></tr>`;}).join('')}</tbody>`;
+}
+
+let ic=null,ig=null;
+function ui(){
+  const yrs=['2000','2001','2002','2003','2004','2005','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023'];
+  const sp=[-9.1,-11.9,-22.1,28.7,10.9,4.9,15.8,5.5,-37,26.5,15.1,2.1,16,32.4,13.7,1.4,12,21.8,-4.4,31.5,18.4,28.7,-18.1,26.3];
+  const mw=[-13.2,-16.8,-19.9,33.1,14.7,9.5,20.1,9.6,-40.3,30,11.8,-5.5,15.8,26.7,4.9,-0.9,7.5,22.4,-8.7,27.7,15.9,21.8,-18.1,23.8];
+  const em=[-30.6,-2.4,-6,55.8,25.5,34,32.2,39.4,-53.2,78.5,18.9,-18.4,18.2,-2.6,-2.2,-14.9,11.2,37.3,-14.6,18.4,18.3,-2.5,-20.1,9.8];
+  const ctx=document.getElementById('idxChart').getContext('2d');
+  if(ic)ic.destroy();
+  ic=new Chart(ctx,{type:'bar',data:{labels:yrs,datasets:[{label:'S&P 500',data:sp,backgroundColor:sp.map(v=>v>=0?'rgba(0,217,126,.7)':'rgba(255,77,109,.7)'),borderRadius:3},{label:'MSCI World',data:mw,backgroundColor:mw.map(v=>v>=0?'rgba(108,99,255,.5)':'rgba(255,77,109,.4)'),borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b6b8a',font:{size:9},maxRotation:45}},y:{ticks:{color:'#6b6b8a',font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.04)'}}}}});
+  const g1=[10000],g2=[10000],g3=[10000];
+  for(let i=0;i<sp.length;i++){g1.push(Math.round(g1[i]*(1+sp[i]/100)));g2.push(Math.round(g2[i]*(1+mw[i]/100)));g3.push(Math.round(g3[i]*(1+em[i]/100)));}
+  const ctx2=document.getElementById('idxGrowth').getContext('2d');
+  if(ig)ig.destroy();
+  const lbl2=['1999',...yrs];
+  ig=new Chart(ctx2,{type:'line',data:{labels:lbl2,datasets:[{data:g1,borderColor:'#00d97e',borderWidth:2,fill:false,tension:.3,pointRadius:0},{data:g2,borderColor:'#6c63ff',borderWidth:2,fill:false,tension:.3,pointRadius:0},{data:g3,borderColor:'#f5a623',borderWidth:2,fill:false,tension:.3,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b6b8a',font:{size:10},maxTicksLimit:10}},y:{ticks:{color:'#6b6b8a',font:{size:10},callback:v=>fmt(v)}}}}});
+}
+
+uc();
+</script>
+</body>
+</html>
